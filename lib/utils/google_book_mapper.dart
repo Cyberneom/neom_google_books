@@ -1,7 +1,7 @@
-import 'package:neom_core/core/app_config.dart';
-import 'package:neom_core/core/domain/model/app_media_item.dart';
-import 'package:neom_core/core/domain/model/genre.dart';
-import 'package:neom_core/core/utils/enums/app_media_source.dart';
+import 'package:neom_core/app_config.dart';
+import 'package:neom_core/domain/model/app_media_item.dart';
+import 'package:neom_core/domain/model/genre.dart';
+import 'package:neom_core/utils/enums/app_media_source.dart';
 import '../domain/model/google_book.dart';
 
 class GoogleBookMapper {

@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:neom_core/core/app_config.dart';
-import 'package:neom_core/core/data/firestore/constants/app_firestore_collection_constants.dart';
-import 'package:neom_core/core/domain/model/app_media_item.dart';
-import 'package:neom_core/core/domain/model/item_list.dart';
-import 'package:neom_core/core/utils/enums/app_media_source.dart';
-import 'package:neom_core/core/utils/enums/media_item_type.dart';
+import 'package:neom_core/app_config.dart';
+import 'package:neom_core/data/firestore/constants/app_firestore_collection_constants.dart';
+import 'package:neom_core/domain/model/app_media_item.dart';
+import 'package:neom_core/domain/model/item_list.dart';
+import 'package:neom_core/utils/enums/app_media_source.dart';
+import 'package:neom_core/utils/enums/media_item_type.dart';
 
 class AppGoogleBookFirestore {
 
