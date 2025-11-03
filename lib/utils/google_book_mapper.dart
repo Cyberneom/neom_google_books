@@ -1,14 +1,15 @@
 import 'package:neom_core/app_config.dart';
-import 'package:neom_core/domain/model/app_media_item.dart';
+import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/genre.dart';
-import 'package:neom_core/utils/enums/app_media_source.dart';
+import 'package:neom_core/utils/enums/external_media_source.dart';
+import 'package:neom_core/utils/enums/media_item_type.dart';
 import '../domain/model/google_book.dart';
 
 class GoogleBookMapper {
 
-  static AppMediaItem toAppMediaItem(GoogleBook googleBook) {
+  static ExternalItem toExternalItem(GoogleBook googleBook) {
 
-    AppMediaItem appItem = AppMediaItem();
+    ExternalItem externalItem = ExternalItem();
     List<Genre> genres = [];
 
     try {
@@ -34,27 +35,28 @@ class GoogleBookMapper {
         });
       }
 
-      appItem =  AppMediaItem(
+      externalItem =  ExternalItem(
         id: googleBook.id ?? "",
         name: googleBook.volumeInfo?.title ?? "",
         album: googleBook.volumeInfo?.publisher ?? "",
-        artist: authors,
-        allImgs: [googleBook.volumeInfo?.imageLinks?.smallThumbnail ?? ""],
+        ownerName: authors,
+        galleryUrls: [googleBook.volumeInfo?.imageLinks?.smallThumbnail ?? ""],
         duration: googleBook.volumeInfo?.pageCount ?? 0, ///NUMBER OF PAGES
         imgUrl: googleBook.volumeInfo?.imageLinks?.thumbnail ?? "",
         permaUrl: googleBook.volumeInfo?.infoLink ?? "",
         url: googleBook.volumeInfo?.previewLink ?? "",
         state: 0,
-        genres: genres.map((e) => e.name).toList(),
+        categories: genres.map((e) => e.name).toList(),
         description: googleBook.volumeInfo?.description ?? "",
-        mediaSource: AppMediaSource.google,
+        source: ExternalSource.google,
         publishedYear: 0, ///VERIFY HOW TO HANDLE THIS DATE TO SINCEEPOCH googleBook.volumeInfo?.publishedDate ?? ""
+        type: MediaItemType.book
       );
     } catch (e) {
       AppConfig.logger.e(e.toString());
     }
 
-    return appItem;
+    return externalItem;
   }
 
 }

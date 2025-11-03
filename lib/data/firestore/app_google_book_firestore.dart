@@ -4,40 +4,37 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_collection_constants.dart';
-import 'package:neom_core/domain/model/app_media_item.dart';
+import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/item_list.dart';
-import 'package:neom_core/utils/enums/app_media_source.dart';
-import 'package:neom_core/utils/enums/media_item_type.dart';
 
 class AppGoogleBookFirestore {
 
   final appGoogleBookReference = FirebaseFirestore.instance.collection(AppFirestoreCollectionConstants.googleBooks);
   final profileReference = FirebaseFirestore.instance.collectionGroup(AppFirestoreCollectionConstants.profiles);
 
-  Future<AppMediaItem> retrieve(String itemId) async {
+  Future<ExternalItem> retrieve(String itemId) async {
     AppConfig.logger.d("Getting item $itemId");
-    AppMediaItem appMediaItem = AppMediaItem();
+    ExternalItem externalItem = ExternalItem();
     try {
       await appGoogleBookReference.doc(itemId).get().then((doc) {
         if (doc.exists) {
-          appMediaItem = AppMediaItem.fromJSON(jsonEncode(doc.data()));
-          AppConfig.logger.d("AppMediaItem ${appMediaItem.name} was retrieved with details");
+          externalItem = ExternalItem.fromJSON(jsonEncode(doc.data()));
+          AppConfig.logger.d("ExternalItem ${externalItem.name} was retrieved with details");
         } else {
-          AppConfig.logger.d("AppMediaItem not found");
+          AppConfig.logger.d("ExternalItem not found");
         }
       });
     } catch (e) {
       AppConfig.logger.d(e);
       rethrow;
     }
-    return appMediaItem;
+    return externalItem;
   }
 
-  Future<Map<String, AppMediaItem>> fetchAll({ int minItems = 0, int maxLength = 100,
-    MediaItemType? type, List<MediaItemType>? excludeTypes}) async {
-    AppConfig.logger.t("Getting appMediaItems from list");
+  Future<Map<String, ExternalItem>> fetchAll({ int minItems = 0, int maxLength = 100}) async {
+    AppConfig.logger.t("Getting externalItems from list");
 
-    Map<String, AppMediaItem> appMediaItems = {};
+    Map<String, ExternalItem> externalItems = {};
 
     try {
       QuerySnapshot querySnapshot = await appGoogleBookReference.get();
@@ -45,38 +42,35 @@ class AppGoogleBookFirestore {
       if (querySnapshot.docs.isNotEmpty) {
         AppConfig.logger.t("QuerySnapshot is not empty");
         for (var documentSnapshot in querySnapshot.docs) {
-          AppMediaItem appMediaItem = AppMediaItem.fromJSON(documentSnapshot.data());
-          if(appMediaItem.name.toLowerCase() == 'no se vaya a confundir - en vivo') {
-            AppConfig.logger.i("Add ${appMediaItem.name} Debuggin next");
+          ExternalItem externalItem = ExternalItem.fromJSON(documentSnapshot.data());
+          if(externalItem.name.toLowerCase() == 'no se vaya a confundir - en vivo') {
+            AppConfig.logger.i("Add ${externalItem.name} Debuggin next");
           }
-          appMediaItem.id = documentSnapshot.id;
-          if((type == null || appMediaItem.type == type)
-              && (excludeTypes == null || !excludeTypes.contains(appMediaItem.type))) {
-            appMediaItems[appMediaItem.id] = appMediaItem;
-          }
-          AppConfig.logger.t("Add ${appMediaItem.name} to fetchAll list");
+          externalItem.id = documentSnapshot.id;
+          externalItems[externalItem.id] = externalItem;
+          AppConfig.logger.t("Add ${externalItem.name} to fetchAll list");
         }
       }
     } catch (e) {
       AppConfig.logger.d(e);
     }
-    return appMediaItems;
+    return externalItems;
   }
 
-  Future<Map<String, AppMediaItem>> retrieveFromList(List<String> appMediaItemIds) async {
-    AppConfig.logger.t("Getting ${appMediaItemIds.length} appMediaItems from firestore");
+  Future<Map<String, ExternalItem>> retrieveFromList(List<String> externalItemIds) async {
+    AppConfig.logger.t("Getting ${externalItemIds.length} externalItems from firestore");
 
-    Map<String, AppMediaItem> appMediaItems = {};
+    Map<String, ExternalItem> externalItems = {};
 
     try {
       QuerySnapshot querySnapshot = await appGoogleBookReference.get();
 
       if (querySnapshot.docs.isNotEmpty) {
         for (var documentSnapshot in querySnapshot.docs) {
-          if(appMediaItemIds.contains(documentSnapshot.id)){
-            AppMediaItem appMediaItemm = AppMediaItem.fromJSON(documentSnapshot.data());
-            AppConfig.logger.d("AppMediaItem ${appMediaItemm.name} was retrieved with details");
-            appMediaItems[documentSnapshot.id] = appMediaItemm;
+          if(externalItemIds.contains(documentSnapshot.id)){
+            ExternalItem externalItemm = ExternalItem.fromJSON(documentSnapshot.data());
+            AppConfig.logger.d("ExternalItem ${externalItemm.name} was retrieved with details");
+            externalItems[documentSnapshot.id] = externalItemm;
           }
         }
       }
@@ -84,52 +78,41 @@ class AppGoogleBookFirestore {
     } catch (e) {
       AppConfig.logger.d(e);
     }
-    return appMediaItems;
+    return externalItems;
   }
 
-  Future<bool> exists(String appMediaItemId) async {
-    AppConfig.logger.d("Getting appMediaItem $appMediaItemId");
+  Future<bool> exists(String externalItemId) async {
+    AppConfig.logger.d("Getting externalItem $externalItemId");
 
     try {
-      await appGoogleBookReference.doc(appMediaItemId).get().then((doc) {
+      await appGoogleBookReference.doc(externalItemId).get().then((doc) {
         if (doc.exists) {
-          AppConfig.logger.d("AppMediaItem found");
+          AppConfig.logger.d("ExternalItem found");
           return true;
         }
       });
     } catch (e) {
       AppConfig.logger.e(e);
     }
-    AppConfig.logger.d("AppMediaItem not found");
+    AppConfig.logger.d("ExternalItem not found");
     return false;
   }
 
-  Future<void> insert(AppMediaItem appMediaItem) async {
-    AppConfig.logger.t("Adding appMediaItem to database collection");
+  Future<void> insert(ExternalItem externalItem) async {
+    AppConfig.logger.t("Adding externalItem to database collection");
     try {
-      if((!appMediaItem.url.contains("gig-me-out") && !appMediaItem.url.contains("gigmeout")
-          && !appMediaItem.url.contains("firebasestorage.googleapis.com")) && appMediaItem.mediaSource == AppMediaSource.internal) {
-        if(appMediaItem.url.contains("spotify") || appMediaItem.url.contains("p.scdn.co")) {
-          appMediaItem.mediaSource = AppMediaSource.spotify;
-        } else if(appMediaItem.url.contains("youtube")) {
-          appMediaItem.mediaSource = AppMediaSource.youtube;
-        } else {
-          appMediaItem.mediaSource = AppMediaSource.other;
-        }
-    }
-
-      await appGoogleBookReference.doc(appMediaItem.id).set(appMediaItem.toJSON());
-      AppConfig.logger.d("AppMediaItem inserted into Firestore");
+      await appGoogleBookReference.doc(externalItem.id).set(externalItem.toJSON());
+      AppConfig.logger.d("ExternalItem inserted into Firestore");
     } catch (e) {
       AppConfig.logger.e(e.toString());
-      AppConfig.logger.i("AppMediaItem not inserted into Firestore");
+      AppConfig.logger.i("ExternalItem not inserted into Firestore");
     }
   }
 
-  Future<bool> remove(AppMediaItem appMediaItem) async {
-    AppConfig.logger.d("Removing appMediaItem from database collection");
+  Future<bool> remove(ExternalItem externalItem) async {
+    AppConfig.logger.d("Removing externalItem from database collection");
     try {
-      await appGoogleBookReference.doc(appMediaItem.id).delete();
+      await appGoogleBookReference.doc(externalItem.id).delete();
       return true;
     } catch (e) {
       AppConfig.logger.d(e.toString());
@@ -137,7 +120,7 @@ class AppGoogleBookFirestore {
     }
   }
 
-  Future<bool> removeItemFromList(String profileId, String itemlistId, AppMediaItem appMediaItem) async {
+  Future<bool> removeItemFromList(String profileId, String itemlistId, ExternalItem externalItem) async {
     AppConfig.logger.d("Removing ItemlistItem for user $profileId");
 
     try {
@@ -150,7 +133,7 @@ class AppGoogleBookFirestore {
                 .doc(itemlistId).get();
 
             Itemlist itemlist = Itemlist.fromJSON(snapshot.data());
-            itemlist.appMediaItems?.removeWhere((element) => element.id == appMediaItem.id);
+            itemlist.externalItems?.removeWhere((element) => element.id == externalItem.id);
             await document.reference.collection(AppFirestoreCollectionConstants.itemlists)
                 .doc(itemlistId).update(itemlist.toJSON());
 
@@ -158,26 +141,26 @@ class AppGoogleBookFirestore {
         }
       });
 
-      AppConfig.logger.i("ItemlistItem ${appMediaItem.name} was updated to ${appMediaItem.state}");
+      AppConfig.logger.i("ItemlistItem ${externalItem.name} was updated to ${externalItem.state}");
       return true;
     } catch (e) {
       AppConfig.logger.e(e.toString());
     }
 
-    AppConfig.logger.d("ItemlistItem ${appMediaItem.name} was not updated");
+    AppConfig.logger.d("ItemlistItem ${externalItem.name} was not updated");
     return false;
   }
 
-  Future<void> existsOrInsert(AppMediaItem appMediaItem) async {
-    AppConfig.logger.t("existsOrInsert appMediaItem ${appMediaItem.id}");
+  Future<void> existsOrInsert(ExternalItem externalItem) async {
+    AppConfig.logger.t("existsOrInsert externalItem ${externalItem.id}");
 
     try {
-      appGoogleBookReference.doc(appMediaItem.id).get().then((doc) {
+      appGoogleBookReference.doc(externalItem.id).get().then((doc) {
         if (doc.exists) {
-          AppConfig.logger.t("AppMediaItem found");
+          AppConfig.logger.t("ExternalItem found");
         } else {
-          AppConfig.logger.d("AppMediaItem ${appMediaItem.id}. ${appMediaItem.name} not found. Inserting");
-          insert(appMediaItem);
+          AppConfig.logger.d("ExternalItem ${externalItem.id}. ${externalItem.name} not found. Inserting");
+          insert(externalItem);
         }
       });
     } catch (e) {
