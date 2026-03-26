@@ -1,4 +1,5 @@
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/genre.dart';
 import 'package:neom_core/utils/enums/external_media_source.dart';
@@ -52,8 +53,8 @@ class GoogleBookMapper {
         publishedYear: 0, ///VERIFY HOW TO HANDLE THIS DATE TO SINCEEPOCH googleBook.volumeInfo?.publishedDate ?? ""
         type: MediaItemType.book
       );
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_google_books', operation: 'toExternalItem');
     }
 
     return externalItem;

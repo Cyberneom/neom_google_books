@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_collection_constants.dart';
 import 'package:neom_core/domain/model/external_item.dart';
 import 'package:neom_core/domain/model/item_list.dart';
@@ -91,8 +92,8 @@ class AppGoogleBookFirestore {
           return true;
         }
       });
-    } catch (e) {
-      AppConfig.logger.e(e);
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_google_books', operation: 'exists');
     }
     AppConfig.logger.d("ExternalItem not found");
     return false;
@@ -103,8 +104,8 @@ class AppGoogleBookFirestore {
     try {
       await appGoogleBookReference.doc(externalItem.id).set(externalItem.toJSON());
       AppConfig.logger.d("ExternalItem inserted into Firestore");
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_google_books', operation: 'insert');
       AppConfig.logger.i("ExternalItem not inserted into Firestore");
     }
   }
@@ -143,8 +144,8 @@ class AppGoogleBookFirestore {
 
       AppConfig.logger.i("ItemlistItem ${externalItem.name} was updated to ${externalItem.state}");
       return true;
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_google_books', operation: 'removeItemFromList');
     }
 
     AppConfig.logger.d("ItemlistItem ${externalItem.name} was not updated");
@@ -163,8 +164,8 @@ class AppGoogleBookFirestore {
           insert(externalItem);
         }
       });
-    } catch (e) {
-      AppConfig.logger.e(e);
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_google_books', operation: 'existsOrInsert');
     }
 
   }
