@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased - System updates
+- Actualizaciones de estabilidad y compatibilidad.
+
 ## 1.1.0
 - Integrate SINT framework — migrate from deprecated GetX API
 - Update SDK constraints to >=3.8.0
